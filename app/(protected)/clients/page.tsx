@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import type { Client, ClientFocus, ClientStatus, PayRecurrence } from "@/lib/types";
 import { CLIENT_STATUS_LABEL, CLIENT_STATUS_ORDER } from "@/lib/types";
-import { formatDate } from "@/lib/format";
+import { formatDate, todayIso } from "@/lib/format";
 import {
   PageHeader,
   StatusPill,
@@ -35,6 +35,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[] | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [moveTarget, setMoveTarget] = useState<Client | null>(null);
   const confirm = useConfirm();
 
   async function load() {
@@ -137,6 +138,22 @@ export default function ClientsPage() {
     await supabase.from("clients").delete().eq("id", id);
   }
 
+  async function moveToPastClient(
+    client: Client,
+    input: { industry: string; lastWorkedDate: string },
+  ) {
+    await supabase.from("past_clients").insert({
+      name: client.name,
+      industry: input.industry || null,
+      last_worked_date: input.lastWorkedDate || null,
+      notes: client.notes,
+    });
+    await supabase.from("clients").delete().eq("id", client.id);
+    setClients((prev) => (prev ? prev.filter((c) => c.id !== client.id) : prev));
+    setExpandedId(null);
+    setMoveTarget(null);
+  }
+
   if (clients === null) return <LoadingState />;
 
   return (
@@ -163,6 +180,7 @@ export default function ClientsPage() {
               onDelete={() =>
                 confirm.ask(() => deleteClient(client.id))
               }
+              onMoveToPast={() => setMoveTarget(client)}
             />
           ))}
         </div>
@@ -172,6 +190,20 @@ export default function ClientsPage() {
 
       <Sheet open={addOpen} onClose={() => setAddOpen(false)} title="New client">
         <AddClientForm onSubmit={createClient} />
+      </Sheet>
+
+      <Sheet
+        open={moveTarget !== null}
+        onClose={() => setMoveTarget(null)}
+        title="Move to Past Clients"
+      >
+        {moveTarget && (
+          <MoveToPastForm
+            client={moveTarget}
+            onSubmit={(input) => moveToPastClient(moveTarget, input)}
+            onCancel={() => setMoveTarget(null)}
+          />
+        )}
       </Sheet>
 
       <ConfirmModal
@@ -192,6 +224,7 @@ function ClientCard({
   onUpdate,
   onUpdateFocus,
   onDelete,
+  onMoveToPast,
 }: {
   client: Client;
   expanded: boolean;
@@ -199,6 +232,7 @@ function ClientCard({
   onUpdate: (patch: Partial<Client>) => void;
   onUpdateFocus: (focus: ClientFocus, patch: Partial<ClientFocus>) => void;
   onDelete: () => void;
+  onMoveToPast: () => void;
 }) {
   const [goal, setGoal] = useState(client.quarterly_goal ?? "");
   const [notes, setNotes] = useState(client.notes ?? "");
@@ -319,6 +353,7 @@ function ClientCard({
             )}
           </div>
 
+          <GhostButton onClick={onMoveToPast}>Move to Past Clients</GhostButton>
           <GhostButton onClick={onDelete}>Remove client</GhostButton>
         </div>
       )}
@@ -364,6 +399,51 @@ function FocusRow({
         }}
       />
     </div>
+  );
+}
+
+function MoveToPastForm({
+  client,
+  onSubmit,
+  onCancel,
+}: {
+  client: Client;
+  onSubmit: (input: { industry: string; lastWorkedDate: string }) => void;
+  onCancel: () => void;
+}) {
+  const [industry, setIndustry] = useState("");
+  const [lastWorkedDate, setLastWorkedDate] = useState(todayIso());
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit({ industry, lastWorkedDate });
+      }}
+      className="flex flex-col gap-4"
+    >
+      <p className="text-[13px] text-text-muted">
+        Moves <span className="font-medium text-text">{client.name}</span> out of
+        the active roster and into Past Clients, carrying their notes over.
+        This can&apos;t be undone from here.
+      </p>
+      <TextField
+        label="Industry"
+        value={industry}
+        onChange={setIndustry}
+        placeholder="Optional"
+      />
+      <TextField
+        label="Last worked together"
+        type="date"
+        value={lastWorkedDate}
+        onChange={setLastWorkedDate}
+      />
+      <div className="flex gap-2">
+        <GhostButton onClick={onCancel}>Cancel</GhostButton>
+        <PrimaryButton type="submit">Move to Past Clients</PrimaryButton>
+      </div>
+    </form>
   );
 }
 
