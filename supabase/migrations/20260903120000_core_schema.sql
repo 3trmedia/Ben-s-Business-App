@@ -1,11 +1,23 @@
 -- Business Ops App: core schema
--- Single-user app. RLS restricts every table to the owner's Google account
--- (checked against the JWT email claim) rather than a generic "any authenticated user"
--- check, since Supabase project-level access could otherwise be broadened later.
+-- Shares its Supabase project with Ben's Improvement App (same free-tier org
+-- constraint), so this reuses that project's existing auth/approval system
+-- rather than inventing a parallel one: public.is_approved() and the
+-- app_users allowlist already exist from that app's access-control migration
+-- and gate this app's tables the same way. Table/type names below were
+-- checked against that project's existing schema for collisions — none.
 
-create or replace function is_owner() returns boolean as $$
-  select coalesce(auth.jwt() ->> 'email', '') = 'empowertherebel@gmail.com';
-$$ language sql stable;
+-- This project already had leftover objects from the health app's earlier,
+-- since-removed Clients-tab prototype (client_status, pay_recurrence, and
+-- possibly a stale clients table) — cleared here per Ben's go-ahead so this
+-- migration can define them fresh for this standalone app instead.
+drop table if exists client_focuses cascade;
+drop table if exists clients cascade;
+drop table if exists past_clients cascade;
+drop table if exists leads cascade;
+drop table if exists employees cascade;
+drop table if exists payment_overrides cascade;
+drop type if exists client_status cascade;
+drop type if exists pay_recurrence cascade;
 
 create type client_status as enum ('starting', 'ongoing', 'closing');
 create type pay_recurrence as enum ('monthly', 'biweekly', 'weekly', 'irregular');
@@ -75,13 +87,13 @@ alter table leads enable row level security;
 alter table employees enable row level security;
 alter table payment_overrides enable row level security;
 
-create policy "owner full access" on clients for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on client_focuses for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on past_clients for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on leads for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on employees for all using (is_owner()) with check (is_owner());
-create policy "owner full access" on payment_overrides for all using (is_owner()) with check (is_owner());
+create policy "approved users only" on clients for all to authenticated using (public.is_approved()) with check (public.is_approved());
+create policy "approved users only" on client_focuses for all to authenticated using (public.is_approved()) with check (public.is_approved());
+create policy "approved users only" on past_clients for all to authenticated using (public.is_approved()) with check (public.is_approved());
+create policy "approved users only" on leads for all to authenticated using (public.is_approved()) with check (public.is_approved());
+create policy "approved users only" on employees for all to authenticated using (public.is_approved()) with check (public.is_approved());
+create policy "approved users only" on payment_overrides for all to authenticated using (public.is_approved()) with check (public.is_approved());
 
 -- seed: the one employee that exists today
 insert into employees (name, pay_amount, pay_date, pay_recurrence)
-values ('Dalton', null, date_trunc('month', now())::date + interval '0 day', 'monthly');
+values ('Dalton', null, date_trunc('month', now())::date, 'monthly');
