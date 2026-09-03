@@ -1,10 +1,4 @@
-import type {
-  Client,
-  Employee,
-  PaymentInstance,
-  PaymentOverride,
-  PayRecurrence,
-} from "@/lib/types";
+import type { PaymentInstance, PaymentSchedule, PaymentScheduleOverride, PayRecurrence } from "@/lib/types";
 
 function toDate(iso: string): Date {
   return new Date(iso + "T00:00:00");
@@ -28,7 +22,7 @@ function addMonths(d: Date, months: number): Date {
   return copy;
 }
 
-/** Occurrence dates (ISO) for one recurring pay date, within [rangeStart, rangeEnd] inclusive. */
+/** Occurrence dates (ISO) for one recurring anchor date, within [rangeStart, rangeEnd] inclusive. */
 export function occurrencesInRange(
   anchorIso: string,
   recurrence: PayRecurrence,
@@ -72,16 +66,13 @@ export function occurrencesInRange(
 }
 
 export function buildPaymentInstances(
-  clients: Client[],
-  employees: Employee[],
-  overrides: PaymentOverride[],
+  schedules: PaymentSchedule[],
+  overrides: PaymentScheduleOverride[],
   rangeStart: Date,
   rangeEnd: Date,
 ): PaymentInstance[] {
-  const overrideMap = new Map<string, PaymentOverride>();
-  overrides.forEach((o) =>
-    overrideMap.set(`${o.source_type}:${o.source_id}:${o.instance_date}`, o),
-  );
+  const overrideMap = new Map<string, PaymentScheduleOverride>();
+  overrides.forEach((o) => overrideMap.set(`${o.schedule_id}:${o.instance_date}`, o));
 
   const instances: PaymentInstance[] = [];
 
@@ -89,11 +80,10 @@ export function buildPaymentInstances(
   const wideStart = addDays(rangeStart, -31);
   const wideEnd = addDays(rangeEnd, 31);
 
-  for (const client of clients) {
-    if (!client.pay_date) continue;
-    const occs = occurrencesInRange(client.pay_date, client.pay_recurrence, wideStart, wideEnd);
+  for (const schedule of schedules) {
+    const occs = occurrencesInRange(schedule.anchor_date, schedule.recurrence, wideStart, wideEnd);
     for (const occDate of occs) {
-      const key = `client:${client.id}:${occDate}`;
+      const key = `${schedule.id}:${occDate}`;
       const override = overrideMap.get(key);
       const finalDate = override ? override.new_date : occDate;
       if (!finalDate) continue; // skipped instance
@@ -101,35 +91,11 @@ export function buildPaymentInstances(
       if (d < rangeStart || d > rangeEnd) continue;
       instances.push({
         id: key,
+        scheduleId: schedule.id,
         date: finalDate,
-        direction: "incoming",
-        label: client.name,
-        amount: null,
-        sourceType: "client",
-        sourceId: client.id,
-        overridden: !!override,
-      });
-    }
-  }
-
-  for (const employee of employees) {
-    if (!employee.pay_date) continue;
-    const occs = occurrencesInRange(employee.pay_date, employee.pay_recurrence, wideStart, wideEnd);
-    for (const occDate of occs) {
-      const key = `employee:${employee.id}:${occDate}`;
-      const override = overrideMap.get(key);
-      const finalDate = override ? override.new_date : occDate;
-      if (!finalDate) continue;
-      const d = toDate(finalDate);
-      if (d < rangeStart || d > rangeEnd) continue;
-      instances.push({
-        id: key,
-        date: finalDate,
-        direction: "outgoing",
-        label: employee.name,
-        amount: employee.pay_amount,
-        sourceType: "employee",
-        sourceId: employee.id,
+        direction: schedule.direction,
+        label: schedule.label,
+        amount: override?.new_amount ?? schedule.amount,
         overridden: !!override,
       });
     }

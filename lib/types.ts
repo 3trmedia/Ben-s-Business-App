@@ -41,32 +41,36 @@ export interface Lead {
   created_at: string;
 }
 
-export interface Employee {
+export type PaymentDirection = "incoming" | "outgoing";
+
+export interface PaymentSchedule {
   id: string;
-  name: string;
-  pay_amount: number | null;
-  pay_recurrence: PayRecurrence;
-  pay_date: string;
+  direction: PaymentDirection;
+  label: string;
+  amount: number | null;
+  client_id: string | null;
+  anchor_date: string; // ISO date, first/reference occurrence
+  recurrence: PayRecurrence;
   notes: string | null;
+  created_at: string;
 }
 
-export interface PaymentOverride {
+export interface PaymentScheduleOverride {
   id: string;
-  source_type: "client" | "employee";
-  source_id: string;
-  instance_date: string;
-  new_date: string | null; // null = skip this instance
+  schedule_id: string;
+  instance_date: string; // the un-overridden occurrence date this replaces
+  new_date: string | null; // null = this occurrence is skipped
+  new_amount: number | null; // null = use the schedule's normal amount
   note: string | null;
 }
 
 export interface PaymentInstance {
-  id: string;
+  id: string; // `${schedule_id}:${instance_date}`
+  scheduleId: string;
   date: string; // ISO date, after override applied
-  direction: "incoming" | "outgoing";
+  direction: PaymentDirection;
   label: string;
   amount: number | null;
-  sourceType: "client" | "employee";
-  sourceId: string;
   overridden: boolean;
 }
 
