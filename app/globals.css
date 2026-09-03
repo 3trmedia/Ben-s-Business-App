@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #151815;
+  --surface: #1d211c;
+  --surface-raised: #232720;
+  --text: #eae7dd;
+  --text-muted: #a3a79a;
+  --text-faint: #767a6e;
+  --border: #2e322b;
+  --border-strong: #3c4137;
+  --accent: #6bae97;
+  --accent-strong: #8ac4ae;
+  --accent-on: #0d1512;
+  --accent-soft: #223129;
+  --warn: #d6994f;
+  --warn-soft: #33281a;
+  --danger: #d97a6c;
+  --danger-soft: #33221d;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-on: var(--accent-on);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-plex-sans);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-plex-mono);
+}
+
+html {
+  height: 100%;
+  /* locks the app to dark theme deliberately, matching the rest of Ben's tooling */
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px; /* prevents iOS Safari auto-zoom on focus */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
