@@ -54,6 +54,7 @@ export default function PaymentsPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [schedulesOpen, setSchedulesOpen] = useState(false);
   const [scheduleSheet, setScheduleSheet] = useState<ScheduleSheetState>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const confirm = useConfirm();
 
   async function load() {
@@ -137,7 +138,8 @@ export default function PaymentsPage() {
   }, [gridStart, gridEnd]);
 
   async function moveInstance(instance: PaymentInstance, newDate: string | null) {
-    await supabase.from("payment_schedule_overrides").upsert(
+    setErrorMsg(null);
+    const { error } = await supabase.from("payment_schedule_overrides").upsert(
       {
         schedule_id: instance.scheduleId,
         instance_date: instance.date,
@@ -145,6 +147,10 @@ export default function PaymentsPage() {
       },
       { onConflict: "schedule_id,instance_date" },
     );
+    if (error) {
+      setErrorMsg(`Didn't save: ${error.message}`);
+      return;
+    }
     setSelectedDay(null);
     load();
   }
@@ -158,6 +164,7 @@ export default function PaymentsPage() {
     anchorDate: string;
     recurrence: PayRecurrence;
   }) {
+    setErrorMsg(null);
     const payload = {
       direction: input.direction,
       label: input.label,
@@ -166,10 +173,12 @@ export default function PaymentsPage() {
       anchor_date: input.anchorDate,
       recurrence: input.recurrence,
     };
-    if (input.id) {
-      await supabase.from("payment_schedules").update(payload).eq("id", input.id);
-    } else {
-      await supabase.from("payment_schedules").insert(payload);
+    const { error } = input.id
+      ? await supabase.from("payment_schedules").update(payload).eq("id", input.id)
+      : await supabase.from("payment_schedules").insert(payload);
+    if (error) {
+      setErrorMsg(`Didn't save: ${error.message}`);
+      return;
     }
     setScheduleSheet(null);
     setSelectedDay(null);
@@ -177,7 +186,12 @@ export default function PaymentsPage() {
   }
 
   async function deleteSchedule(id: string) {
-    await supabase.from("payment_schedules").delete().eq("id", id);
+    setErrorMsg(null);
+    const { error } = await supabase.from("payment_schedules").delete().eq("id", id);
+    if (error) {
+      setErrorMsg(`Didn't delete: ${error.message}`);
+      return;
+    }
     setScheduleSheet(null);
     setSelectedDay(null);
     load();
@@ -203,6 +217,15 @@ export default function PaymentsPage() {
           </button>
         }
       />
+
+      {errorMsg && (
+        <div className="mx-5 mb-3 flex items-start justify-between gap-3 rounded-xl border border-border p-3 text-[13px]" style={{ background: "var(--danger-soft)", color: "var(--danger)" }}>
+          <span>{errorMsg}</span>
+          <button onClick={() => setErrorMsg(null)} aria-label="Dismiss" className="shrink-0 font-medium">
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="px-5 pb-5">
         <div className="text-center">
