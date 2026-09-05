@@ -237,6 +237,7 @@ function ClientCard({
   const [goal, setGoal] = useState(client.quarterly_goal ?? "");
   const [notes, setNotes] = useState(client.notes ?? "");
   const [notesOpen, setNotesOpen] = useState(false);
+  const dirty = goal !== (client.quarterly_goal ?? "") || notes !== (client.notes ?? "");
 
   return (
     <Card>
@@ -276,15 +277,6 @@ function ClientCard({
             onChange={setGoal}
             placeholder="What does a win this quarter look like?"
           />
-          {goal !== (client.quarterly_goal ?? "") && (
-            <button
-              onClick={() => onUpdate({ quarterly_goal: goal })}
-              className="-mt-2 self-start text-[12px] font-medium"
-              style={{ color: "var(--accent)" }}
-            >
-              Save goal
-            </button>
-          )}
 
           <div>
             <span className="mb-2 block text-[12px] font-medium tracking-wide text-text-muted">
@@ -340,19 +332,18 @@ function ClientCard({
                   onChange={setNotes}
                   placeholder="Anything worth remembering…"
                 />
-                {notes !== (client.notes ?? "") && (
-                  <button
-                    onClick={() => onUpdate({ notes })}
-                    className="self-start text-[12px] font-medium"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    Save notes
-                  </button>
-                )}
               </div>
             )}
           </div>
 
+          <PrimaryButton
+            disabled={!dirty}
+            onClick={() => {
+              onUpdate({ quarterly_goal: goal, notes });
+            }}
+          >
+            Save changes
+          </PrimaryButton>
           <GhostButton onClick={onMoveToPast}>Move to Past Clients</GhostButton>
           <GhostButton onClick={onDelete}>Remove client</GhostButton>
         </div>

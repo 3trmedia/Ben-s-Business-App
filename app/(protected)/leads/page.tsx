@@ -144,6 +144,7 @@ function LeadCard({
   onPromote: () => void;
 }) {
   const [notes, setNotes] = useState(lead.notes ?? "");
+  const dirty = notes !== (lead.notes ?? "");
   const days = daysUntil(lead.next_contact_date);
   const soon = days !== null && days <= 2;
 
@@ -190,15 +191,9 @@ function LeadCard({
             onChange={setNotes}
             placeholder="What they're waiting on, why they haven't signed…"
           />
-          {notes !== (lead.notes ?? "") && (
-            <button
-              onClick={() => onUpdate({ notes })}
-              className="-mt-2 self-start text-[12px] font-medium"
-              style={{ color: "var(--accent)" }}
-            >
-              Save notes
-            </button>
-          )}
+          <PrimaryButton disabled={!dirty} onClick={() => onUpdate({ notes })}>
+            Save changes
+          </PrimaryButton>
           <PrimaryButton onClick={onPromote}>Promote to client</PrimaryButton>
           <GhostButton onClick={onDelete}>Remove lead</GhostButton>
         </div>

@@ -164,6 +164,7 @@ function PastClientCard({
   onDelete: () => void;
 }) {
   const [notes, setNotes] = useState(entry.notes ?? "");
+  const dirty = notes !== (entry.notes ?? "");
 
   return (
     <Card>
@@ -205,15 +206,9 @@ function PastClientCard({
             onChange={setNotes}
             placeholder="Why they left, worth re-approaching…"
           />
-          {notes !== (entry.notes ?? "") && (
-            <button
-              onClick={() => onUpdate({ notes })}
-              className="-mt-2 self-start text-[12px] font-medium"
-              style={{ color: "var(--accent)" }}
-            >
-              Save notes
-            </button>
-          )}
+          <PrimaryButton disabled={!dirty} onClick={() => onUpdate({ notes })}>
+            Save changes
+          </PrimaryButton>
           <GhostButton onClick={onDelete}>Remove entry</GhostButton>
         </div>
       )}
