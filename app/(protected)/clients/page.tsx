@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import type { Client, ClientFocus, ClientStatus, PayRecurrence } from "@/lib/types";
 import { CLIENT_STATUS_LABEL, CLIENT_STATUS_ORDER } from "@/lib/types";
-import { formatDate, todayIso } from "@/lib/format";
+import { todayIso } from "@/lib/format";
 import {
   PageHeader,
   StatusPill,
@@ -251,9 +251,9 @@ function ClientCard({
           </span>
           <StatusPill status={client.status} />
         </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <span className="text-[12px] text-text-faint">
-            {formatDate(client.pay_date)}
+        <div className="flex min-w-0 shrink items-center gap-2.5">
+          <span className="max-w-[140px] truncate text-[12px] text-text-faint">
+            {client.quarterly_goal || "No goal set"}
           </span>
           <Chevron open={expanded} />
         </div>
