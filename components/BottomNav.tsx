@@ -53,8 +53,9 @@ export default function BottomNav() {
 function ClientsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...props}>
-      <circle cx="12" cy="8" r="3.4" />
-      <path d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6" strokeLinecap="round" />
+      <rect x="3.5" y="8" width="17" height="11" rx="2.2" />
+      <path d="M9 8V6.5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2V8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.5 13h17" strokeLinecap="round" />
     </svg>
   );
 }
@@ -62,8 +63,9 @@ function ClientsIcon(props: React.SVGProps<SVGSVGElement>) {
 function PastIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...props}>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 8v4l2.6 2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="3.5" y="4.5" width="17" height="4.5" rx="1.3" />
+      <path d="M4.5 9v8a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9" strokeLinejoin="round" />
+      <path d="M10 13h4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -71,8 +73,7 @@ function PastIcon(props: React.SVGProps<SVGSVGElement>) {
 function LeadsIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...props}>
-      <path d="M4 19V9l8-5 8 5v10" strokeLinejoin="round" />
-      <path d="M4 19h16M9 19v-6h6v6" strokeLinejoin="round" />
+      <path d="M4 5h16l-6 7.5V18l-4 2v-7.5L4 5Z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
